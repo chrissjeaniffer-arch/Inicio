@@ -1,0 +1,241 @@
+# -*- coding: utf-8 -*-
+"""Contenido de la propuesta de solución (compartido por el Excel y el Word)."""
+
+CORRECCIONES = [
+    ("«Ciclo presupuestario 2027»",
+     "Las fechas de Formulación (14/10/2026–19/01/2027) son del diseño del MFD del módulo, no del ciclo fiscal. "
+     "El riesgo es de retrabajo del MFD, no de operación del presupuesto 2027.",
+     "Se reformula como «cierre del diseño de Formulación»."),
+    ("Brecha de la cuota de pago (D1)",
+     "La Acreditación del responsable (232, desde 20/04/2027) no usa la cuota. El primer proceso que la necesita es "
+     "Pagos entre CUT (236), desde el 16/06/2027.",
+     "La brecha pasa de 407 a 350 días."),
+    ("Contabilidad antes que la ejecución (D4 y D5)",
+     "Hay evidencia de un diseño de transición con el SIAF-SP: la integración SIAF-RP–SIAF-SP (344) y el cierre "
+     "contable (361) están terminados.",
+     "Se rebaja de alerta alta a «pendiente de decisión» (DEC-3)."),
+    ("Ajustes 3, 4 y 5 (adelantar metas, clasificadores y catálogos)",
+     "Comprimían duraciones sin datos de capacidad: el .mpp no tiene recursos.",
+     "Se retiran. Se reemplazan por entregas parciales (M3, M4) y por aplicar los clasificadores temáticos al ciclo 2028."),
+    ("Ajuste 1 (adelantar 162 y 163 en 422 días)",
+     "Se solapaba con los Flujos de caja proyectados (161) y cargaba al CAF de Tesorería en el primer trimestre de 2027.",
+     "Se reemplaza por una cuota de pago v1 (N1) en mayo de 2027; la versión completa se mantiene en 2028."),
+    ("Ajuste 2 (mover la ejecución de bienes y servicios hasta 223 días)",
+     "No consideraba la certificación de crédito, que las Actuaciones preparatorias necesitan antes, ni el modelo de "
+     "devengado que necesita Pagos.",
+     "Se reemplaza por una división en certificación, compromiso y devengado, con entregas parciales. Aparecen dos vínculos nuevos (D23 y D24)."),
+    ("Ajuste 11 (adelantar los catálogos de consolidación 13 días)",
+     "Un solapamiento de 6 días es viable con un vínculo con desfase.",
+     "Se retira; se registra un vínculo FC con −5 días."),
+    ("«Pasar todas las tareas a programación automática»",
+     "Puede mover fechas aprobadas sin control.",
+     "Se reemplaza por una política selectiva: automática solo en tareas con vínculos validados (DEC-9)."),
+    ("Fechas de disponibilidad",
+     "El fin de un MFD no es la disponibilidad del sistema construido. La construcción (C3) no está programada.",
+     "Los hitos se dividen en hitos de diseño (con fecha) e hitos de software (no verificables con el .mpp)."),
+]
+
+# Revalidación de las 22 dependencias + 2 nuevas
+DEPS = [
+    # id, descripcion, obligatoria, naturaleza, tratamiento, resultado, nota
+    ("D1", "Cuota de pago (162–163) → Gestión de pagos (233–236)", "Sí (operación y diseño)", "Secuencia real", "Entrega parcial (N1) + división v1/v2", "Se corrige", "Fecha requerida 16/06/2027; brecha 350 días."),
+    ("D2", "Contrato, OC y OS (196) → compromiso de bienes y servicios (181)", "Sí", "Secuencia real", "Entrega parcial (M1) + mover 181 +29 días", "Se mantiene", ""),
+    ("D3", "Conformidad (197) → devengado de bienes y servicios", "Sí", "Secuencia real", "Dividir 181 + entrega parcial (M2) + nueva N3", "Se mantiene", ""),
+    ("D4", "Ejecución presupuestaria → Estados presupuestales y cierre (359–360)", "Depende de la fuente", "Depende de decisión", "Escenario A + adecuación N5", "Se corrige", "Rebajada: transición con SIAF-SP."),
+    ("D5", "Gestión (ejecución, pagos, deuda) → Estados financieros (355, 358)", "Depende de la fuente", "Depende de decisión", "Escenario A + adecuación N5", "Se corrige", ""),
+    ("D6", "Procesos 2028–2029 → motor contable (347)", "Sí", "Secuencia real", "Nuevas actualizaciones 3 y 4 (N6, N7)", "Se mantiene", ""),
+    ("D7", "Formulación por proyecto (150) → Formulación (144)", "Sí (diseño)", "Secuencia real de diseño", "Nueva Formulación v2 (N4); no se adelanta 150", "Se corrige", "Se evita comprimir 150."),
+    ("D8", "Administrador de Metas (140) → Formulación (144)", "Parcial", "Solapamiento de diseño", "Entrega parcial (M4)", "Se corrige", "Se retira la compresión de 140."),
+    ("D9", "Clasificadores temáticos (49–50) → Formulación (144)", "No para el MFD", "Solapamiento de diseño", "Aplicar desde la Formulación 2028 (DEC-6)", "Se corrige", ""),
+    ("D10", "Catálogos v2 y relación actividad–finalidad (128–132) → Formulación (144)", "Parcial (estructura)", "Solapamiento de diseño", "Entrega parcial (M3)", "Se corrige", ""),
+    ("D11", "PMI y PMIE (147, StandBy) → Registro de proyectos (149)", "Sí", "Secuencia real", "Reactivar 147 y mover 149 +6 días", "Se mantiene", "Pendiente de DEC-4."),
+    ("D12", "Instrucciones de pago de deuda (270, 272) → ejecución de gastos de deuda (186)", "Sí", "Secuencia real", "Mover 186 +41 días (FF)", "Se mantiene", ""),
+    ("D13", "Ejecución presupuestaria → Seguimiento de metas (366–369)", "Parcial", "Solapamiento viable", "Vínculo FF", "Se mantiene", ""),
+    ("D14", "Catálogo relacional Deuda–Inversión (82) → 149 y 256", "Parcial (estructura)", "Secuencia real", "Entrega parcial (M5)", "Se corrige", "Se retira la compresión de 82."),
+    ("D15", "Gestión administrativa de inversiones (188) → Seguimiento (350)", "Parcial", "Solapamiento viable", "Vínculo FF", "Se mantiene", ""),
+    ("D16", "CMN (153) y PAC (155) → Actuaciones preparatorias (195)", "Sí", "Solapamiento viable", "Vínculos FC y FF", "Se mantiene", ""),
+    ("D17", "Proyección de deuda (167, 169) → Formulación (144)", "Parcial", "Solapamiento de diseño", "Entrega parcial (M8)", "Se mantiene", ""),
+    ("D18", "Recursos OOC, RO y RD (160) → Formulación (144)", "Parcial", "Solapamiento de diseño", "Entrega parcial (M9)", "Se mantiene", ""),
+    ("D19", "Catálogos de consolidación (108–109) → Consolidación (356–357)", "Sí", "Solapamiento viable", "Vínculo FC −5 días", "Se corrige", "Se retira el ajuste 11."),
+    ("D20", "Cuotas de compromiso (175–176) → compromiso (181)", "Sí", "Secuencia correcta", "Vínculo FC", "Se mantiene", "Holgura sube a 21 días."),
+    ("D21", "Formulación y Aprobación (144–145) → Apertura (173)", "Sí", "Secuencia correcta", "Vínculo FC", "Se mantiene", ""),
+    ("D22", "Planillas GFRH (216) → gestión fiscal (182) y pagos", "Sí", "Interfaz no validada", "Hito de validación (M6)", "Se mantiene", ""),
+    ("D23", "Certificación de crédito → Actuaciones preparatorias (195)", "Sí", "Secuencia real (nueva)", "Nueva N2 (FF con 195)", "Nueva", "No estaba en el diagnóstico."),
+    ("D24", "Modelo del devengado → Pagos (234, 236)", "Sí", "Secuencia real (nueva)", "Nueva N2 (FC con 234 y 236)", "Nueva", "No estaba en el diagnóstico."),
+]
+
+AJUSTES = [
+    ("1", "Adelantar 162–163 a ene–abr 2027 (−422 días)", "Se modifica", "Cuota v1 (N1) en may 2027; 162–163 se mantienen como v2."),
+    ("2", "Dividir 181 en compromiso y devengado (+125/+223)", "Se modifica", "División en tres (N2, 181, N3) con entregas parciales M1 y M2; compromiso solo +29 días."),
+    ("3", "Adelantar el Administrador de Metas (−66)", "Se retira", "Compresión sin capacidad verificada. Se reemplaza por M4."),
+    ("4", "Adelantar clasificadores temáticos (−48/−75)", "Se retira", "Se aplican desde la Formulación 2028 (DEC-6)."),
+    ("5", "Adelantar catálogos v2 al 15/01/2027", "Se modifica", "Solo la estructura (M3); el poblado sigue su fecha."),
+    ("6", "Mover cierres contables +418 días", "Se modifica", "Solo en el escenario B. Se recomienda el A con la adecuación N5."),
+    ("7", "Nueva actualización 3 del motor contable", "Se modifica", "Dos actualizaciones (N6 y N7) para cubrir hasta dic 2029."),
+    ("8", "Versión preliminar de deuda e ingresos", "Se mantiene", "Hitos M8 y M9; se conservan las restricciones de 165 y 170."),
+    ("9", "Adelantar el catálogo 82 (−34)", "Se modifica", "Entrega parcial M5 al 30/11/2026, sin comprimir 82."),
+    ("10", "Mover 186 +41 días", "Se mantiene", "Vínculo FF con 269."),
+    ("11", "Adelantar 108–109 (−13)", "Se retira", "Solapamiento aceptado con vínculo FC −5 días."),
+    ("12", "Decidir PMI y Formulación por proyecto", "Se mantiene", "DEC-4 y nueva Formulación v2 (N4)."),
+]
+
+CRIT = ["Integración funcional", "Impacto en otros sistemas", "Variación del cronograma", "Riesgo de retrabajo",
+        "Complejidad", "Recursos adicionales", "Viabilidad", "Efecto en hitos"]
+ALTERNATIVAS = [
+    ("Caso 1 · Tesorería", [
+        ("A", "Adelantar 162 y 163 completos a ene–abr 2027", ["Alta", "Bajo", "Alta (−422 d)", "Bajo", "Media", "Altos", "Baja", "Neutro"]),
+        ("B", "Cuota de pago v1 mínima (N1, may 2027) y v2 completa en may 2028", ["Alta", "Bajo", "Baja (nueva tarea)", "Medio", "Baja", "Bajos", "Alta", "Favorable (H4)"]),
+        ("C", "Retrasar los pagos (233–236) hasta después de may 2028", ["Media", "Alto", "Alta (+350 d)", "Bajo", "Baja", "Nulos", "Media", "Desfavorable"]),
+    ], "B", "Habilita los pagos de 2027 con una regla mínima, sin comprimir Tesorería ni retrasar el ciclo financiero."),
+    ("Caso 2 · Abastecimiento – Presupuesto", [
+        ("A", "Adelantar contrato/OC/OS (196) y Conformidad (197)", ["Alta", "Medio", "Alta", "Bajo", "Alta", "Altos", "Baja (dependen de 195)", "Neutro"]),
+        ("B", "Dividir 181 en certificación, compromiso y devengado, con entregas parciales M1 y M2", ["Alta", "Bajo", "Baja (+29 d)", "Bajo", "Media", "Medios", "Alta", "Favorable (H4)"]),
+        ("C", "Mover 181 completa después de 197", ["Media", "Alto", "Alta (+160 d)", "Bajo", "Baja", "Bajos", "Media", "Desfavorable"]),
+    ], "B", "Ordena el ciclo certificación → compromiso → devengado → pago con la menor variación, y agrega la certificación que faltaba."),
+    ("Caso 3 · Contabilidad – Gestión – Evaluación", [
+        ("A", "Usar el SIAF-SP como fuente de transición y adecuar cierres (N5) en 2028", ["Media-alta", "Bajo", "Nula en 2026–2027", "Medio", "Baja", "Bajos", "Alta", "Neutro"]),
+        ("B", "Usar solo los nuevos sistemas AFSP: mover 355, 358, 359 y 360 después de la ejecución", ["Alta", "Alto (CGR, EFP)", "Alta (+418 d)", "Bajo", "Media", "Medios", "Media", "Desfavorable (H6)"]),
+    ], "A", "Es coherente con lo ya construido (344, 354, 361, 362 terminados) y evita retrasar la Cuenta General."),
+    ("Caso 4 · Clasificadores y Catálogos", [
+        ("A", "Adelantar las fechas de fin de los catálogos", ["Alta", "Bajo", "Media", "Bajo", "Media", "Altos", "Baja", "Neutro"]),
+        ("B", "Versión mínima (estructura) al 15/01/2027 (M3), versión completa en su fecha y actualizaciones por ciclo", ["Alta", "Bajo", "Nula", "Medio", "Baja", "Bajos", "Alta", "Favorable (H1)"]),
+    ], "B", "La Formulación necesita la estructura, no el poblado completo. No exige comprimir trabajo."),
+    ("Caso 5 · Inversiones – Presupuesto", [
+        ("A", "Reactivar PMI (147) ya, mover 149 +6 días y agregar Formulación v2 (N4)", ["Alta", "Bajo", "Baja", "Medio", "Baja", "Bajos", "Alta", "Favorable (H2)"]),
+        ("B", "Mantener StandBy y mover 149, 150 y N4 por cada mes de espera", ["Media", "Medio", "Variable", "Medio", "Baja", "Nulos", "Media", "Desfavorable"]),
+        ("C", "Adelantar 150 para que se diseñe junto con 144", ["Alta", "Medio", "Media", "Bajo", "Alta", "Altos", "Baja (149 no termina antes)", "Neutro"]),
+    ], "A", "Resuelve la cadena PMI → registro → formulación con el menor movimiento; la Formulación v2 integra el detalle por proyecto."),
+    ("Caso 6 · Endeudamiento – Contabilidad", [
+        ("A", "Una sola actualización final del motor en 2029", ["Media", "Bajo", "Baja", "Alto", "Baja", "Bajos", "Media", "Neutro"]),
+        ("B", "Dos actualizaciones: N6 (abr–jun 2029) y N7 (oct–dic 2029, FF con 296)", ["Alta", "Bajo", "Baja", "Bajo", "Media", "Medios", "Alta", "Favorable (H5, H7)"]),
+    ], "B", "Reduce el retrabajo al incorporar los eventos de deuda por bloques, a medida que se diseñan."),
+    ("Caso 7 · Evaluación transversal", [
+        ("A", "Crear un módulo de Evaluación por sistema", ["Alta", "Alto", "Alta", "Bajo", "Alta", "Altos", "Baja", "Desfavorable"]),
+        ("B", "Evaluar a través de Presupuesto, Inversiones y Contabilidad, con una validación final (N10)", ["Alta", "Bajo", "Baja", "Medio", "Baja", "Bajos", "Alta", "Favorable (H6, H7)"]),
+    ], "B", "Los datos de los siete sistemas ya llegan a Evaluación vía la contabilidad (CGR, EFP) y la ejecución presupuestaria."),
+]
+
+EVAL_TRANS = [
+    ("Ejecución del gasto (certificación, compromiso, devengado)", "Presupuesto, Abastecimiento, GFRH", "Evaluación presupuestaria (366–373); Estados presupuestales (359)"),
+    ("Planillas e ingresos del personal", "GFRH", "Seguimiento dinámico del gasto (368); Estados presupuestales (359)"),
+    ("Adquisiciones y contratos", "Abastecimiento", "Análisis de calidad del gasto (373); Seguimiento de metas (366–367)"),
+    ("Bienes, almacén y activos", "Abastecimiento", "Estados financieros (358); Consolidación contable (357)"),
+    ("Ingresos, pagos y liquidez", "Tesorería", "Estados financieros (358); Estadísticas de Finanzas Públicas (364); Cuenta General (363)"),
+    ("Deuda pública", "Endeudamiento", "Estadísticas de deuda (288–289); Estadísticas de Finanzas Públicas (364); Cuenta General (363)"),
+    ("Ejecución de inversiones", "Inversiones", "Seguimiento físico-financiero, ex post y sostenibilidad (350–352)"),
+    ("Procesos diseñados en 2029 (deuda etapa 2, almacén)", "Endeudamiento, Abastecimiento", "Validación de integración con CGR y EFP (N10)"),
+]
+
+ESCENARIOS = [
+    ("Fecha estimada de cierre del diseño", "28/12/2029", "28/12/2029", "No verificable: posterior a 28/12/2029 si no se suman recursos"),
+    ("Dependencias resueltas (de 24)", "7 resueltas · 5 condicionadas · 4 pendientes de decisión · 8 sin resolver", "8 resueltas · 12 condicionadas · 4 pendientes de decisión · 0 sin resolver", "9 resueltas · 15 condicionadas · 0 pendientes · 0 sin resolver"),
+    ("Alertas críticas pendientes", "2 (mitigadas solo con hitos)", "0 (condicionadas a validación de capacidad)", "0"),
+    ("Actividades reprogramadas", "12 (solo actualización por avance real)", "16 con cambio de fecha + 9 nuevas + 15 hitos", "Más de 22 con cambio de fecha + diferimiento de procesos no críticos"),
+    ("Impacto en recursos", "Bajo", "Medio: +1 a +2 actividades simultáneas en Presupuesto (feb–abr 2027) y Tesorería (may–jun 2027)", "Alto: Tesorería y Contabilidad en paralelo en 2027"),
+    ("Riesgo residual", "Alto", "Medio", "Medio (bajo funcional, alto de plazo)"),
+    ("Viabilidad", "Alta", "Media-alta (condicionada)", "Baja sin recursos adicionales"),
+]
+
+HITOS = [
+    ("H1", "Clasificadores y Catálogos (versión mínima) disponibles para Programación", "Presupuesto, Endeudamiento, Tesorería, Inversiones",
+     "M3 (estructura de 46, 47, 65, 66, 128–132); M5", "Estructuras aprobadas por la DG y cargadas en el Administrador de Catálogos (sin poblado completo)", "CAF Presupuesto"),
+    ("H2", "Programación integrada entre sistemas", "Presupuesto, Inversiones, Endeudamiento, Tesorería, Abastecimiento",
+     "138, 144, 145, 149, 153, 160, 169; M4, M8, M9", "MFD de Formulación con metas, deuda, ingresos y estructura de proyectos referenciados", "CAF Presupuesto + Coordinación"),
+    ("H3", "Programación y Gestión articuladas", "Presupuesto, Inversiones",
+     "173, 175, 176", "Apertura y cuotas de compromiso diseñadas sobre el presupuesto aprobado", "CAF Presupuesto"),
+    ("H4", "Ciclo certificación–compromiso–devengado–pago integrado", "Presupuesto, Abastecimiento, Tesorería, GFRH",
+     "N2, M1, 181, M2, N3, N1, 234, 236, M6", "Modelo común de datos del gasto aprobado por los cuatro CAF; trazabilidad de la orden al pago", "Mesa de integración interCAF"),
+    ("H5", "Gestión y Contabilidad articuladas (motor contable v2)", "Contabilidad y los seis sistemas de Gestión",
+     "346, 347", "Catálogo de Eventos con los eventos de ejecución, pagos y deuda etapa 1", "CAF Contabilidad"),
+    ("H6", "Gestión y Evaluación articuladas", "Presupuesto, Inversiones, Contabilidad",
+     "363, 373, 352, N5", "Evaluación presupuestaria, de inversiones y Cuenta General diseñadas con las fuentes AFSP", "CAF Contabilidad + CAF Presupuesto"),
+    ("H7", "Integración funcional completa de los siete sistemas (diseño)", "Los siete",
+     "N6, N7, N10, 296", "Motor contable y Evaluación cubren todos los procesos diseñados hasta dic 2029", "Coordinación del Proyecto"),
+]
+
+PLAN = [
+    # prioridad, categoría, acción, sistema, responsable, fecha, entregable, decisión
+    (1, "Inmediata", "Aprobar el Escenario 2 como base de la reprogramación", "Transversal", "Coordinación del Proyecto y UCP", "13/11/2026", "Acta de aprobación", "UCP"),
+    (1, "Inmediata", "Decidir la salida de StandBy de la PMI y PMIE (147)", "Inversiones", "CAF Inversiones → Coordinación", "30/10/2026", "Decisión DEC-4", "Coordinación"),
+    (1, "Inmediata", "Cerrar formalmente los 6 catálogos vencidos al 99 % (25, 46, 59, 60, 62, 63)", "Presupuesto", "CAF Presupuesto", "13/11/2026", "MFD aprobados", "CAF"),
+    (1, "Inmediata", "Confirmar la fuente contable de transición (escenario A)", "Contabilidad", "CAF Contabilidad → Coordinación", "30/11/2026", "Decisión DEC-3", "Coordinación"),
+    (1, "Inmediata", "Aprobar la estructura del catálogo relacional Deuda–Inversión (M5)", "Endeudamiento, Inversiones", "CAF Endeudamiento + CAF Inversiones", "30/11/2026", "Estructura aprobada", "Varios CAF"),
+    (2, "Reprogramación", "Depurar el .mpp: duplicados 141–142 y 69/75, fila 133, «<Tarea nueva>» (81) y Estado UCP", "Transversal", "PMO", "13/11/2026", ".mpp depurado", "—"),
+    (2, "Reprogramación", "Cargar tareas nuevas, hitos y vínculos (hoja «Importar a Project» o archivo XML)", "Transversal", "PMO", "27/11/2026", ".mpp con red de dependencias", "—"),
+    (2, "Reprogramación", "Guardar la línea base 1 y fijar una fecha de estado mensual", "Transversal", "PMO", "04/12/2026", "Línea base 1", "Coordinación"),
+    (2, "Reprogramación", "Aplicar la política de programación: automática solo en tareas con vínculos validados", "Transversal", "PMO + Coordinación", "04/12/2026", "Política aprobada (DEC-9)", "Coordinación"),
+    (3, "Validación funcional", "Validar el alcance y la capacidad de la cuota de pago v1 (N1)", "Tesorería", "CAF Tesorería", "15/12/2026", "Ficha de alcance de N1", "CAF"),
+    (3, "Validación funcional", "Validar la división de la ejecución de bienes y servicios (N2, 181, N3)", "Presupuesto, Abastecimiento", "CAF Presupuesto + CAF Abastecimiento + CAF Tesorería", "15/12/2026", "Acuerdo interCAF", "Varios CAF"),
+    (3, "Validación funcional", "Acordar las entregas parciales M1 y M2 dentro de 196 y 197", "Abastecimiento", "CAF Abastecimiento", "15/12/2026", "Plan de entregas", "CAF"),
+    (3, "Validación funcional", "Decidir que los clasificadores 49 y 50 se apliquen desde la Formulación 2028", "Presupuesto", "CAF Presupuesto", "30/11/2026", "Decisión DEC-6", "CAF"),
+    (3, "Validación funcional", "Aprobar las versiones mínimas M3, M4, M8 y M9", "Presupuesto, Endeudamiento, Tesorería", "CAF Presupuesto + CAF Endeudamiento + CAF Tesorería", "15/01/2027", "Estructuras aprobadas", "Varios CAF"),
+    (4, "Integración transversal", "Constituir la mesa de integración del modelo común de datos del gasto (N2)", "Presupuesto, Abastecimiento, Tesorería, Contabilidad", "Coordinación del Proyecto", "15/01/2027", "Mesa constituida", "Coordinación"),
+    (4, "Integración transversal", "Definir la titularidad de convenios, desembolsos y acreedores", "Inversiones, Endeudamiento, Tesorería", "Tres CAF → Coordinación", "30/11/2026", "Decisión DEC-5", "Coordinación"),
+    (4, "Integración transversal", "Solicitar el cronograma de construcción (C3) por sistema, alineado a H1–H7", "Transversal", "Coordinación + OGTI + fábrica", "31/01/2027", "Cronograma C3", "Coordinación"),
+    (4, "Integración transversal", "Planificar las actualizaciones 3 y 4 del motor contable (N6, N7)", "Contabilidad, Endeudamiento", "CAF Contabilidad + CAF Endeudamiento", "31/03/2027", "Plan de eventos por bloque", "Varios CAF"),
+    (5, "Seguimiento y control", "Revisar las 33 actividades «No figura en PMO» e incorporar las del ciclo del gasto", "Presupuesto, Tesorería, Inversiones", "Coordinación + UCP", "15/12/2026", "Decisión DEC-7", "UCP"),
+    (5, "Seguimiento y control", "Reporte mensual de hitos H1–H7, vínculos y ruta crítica", "Transversal", "PMO", "Mensual desde 12/2026", "Reporte de control", "—"),
+]
+
+DECISIONES = [
+    ("DEC-1", "Cuota de pago para los pagos de 2027", "Pagos (233–236) se diseñan antes que la cuota de pago (163)",
+     "A: adelantar 162–163 completos · B: cuota v1 mínima en may 2027 + v2 en 2028 · C: retrasar los pagos a 2028",
+     "B", "Los MFD de pagos se cierran sin la regla de cuota: retrabajo y ciclo de pago no probable en 2027.",
+     "Tesorería, Presupuesto, Endeudamiento", "CAF Tesorería → Coordinación", "15/12/2026"),
+    ("DEC-2", "División de la ejecución de bienes y servicios", "Compromiso y devengado se diseñan antes que la orden y la conformidad",
+     "A: adelantar 196–197 (no viable) · B: dividir 181 con entregas parciales M1 y M2 · C: mover 181 después de 197 (+160 d)",
+     "B", "El gasto corriente se diseña sin su documento fuente; la certificación sigue sin diseño propio.",
+     "Presupuesto, Abastecimiento, Tesorería", "CAF Presupuesto + CAF Abastecimiento → Coordinación", "15/12/2026"),
+    ("DEC-3", "Fuente contable de transición 2026–2027", "Cierres y estados se diseñan antes que la ejecución AFSP",
+     "A: SIAF-SP vigente + adecuación N5 · B: solo nuevos sistemas (+418 d en cierres)",
+     "A", "Riesgo de rediseñar cierres y estados, y de desplazar la Cuenta General.",
+     "Contabilidad, Presupuesto", "CAF Contabilidad → Coordinación", "30/11/2026"),
+    ("DEC-4", "Salida de StandBy de la PMI y PMIE", "La cadena PMI → registro → formulación de proyectos está detenida",
+     "A: reactivar ya (+6 d en 149) · B: mantener StandBy (cada mes = +1 mes en 149, 150 y N4) · C: usar el banco de inversiones vigente (requiere validación)",
+     "A", "Presupuesto y Endeudamiento no tendrán estructura de proyectos para 2027.",
+     "Inversiones, Presupuesto, Endeudamiento", "Coordinación del Proyecto", "30/10/2026"),
+    ("DEC-5", "Titularidad de convenios, desembolsos y acreedores", "Inversiones y Endeudamiento diseñan procesos similares (189/191 y 279/282); Tesorería y Endeudamiento comparten acreedores (85/126)",
+     "A: Endeudamiento titular; Inversiones consume y vincula al proyecto · B: Inversiones titular · C: mantener ambos",
+     "A", "Doble registro de convenios y datos inconsistentes entre sistemas.",
+     "Inversiones, Endeudamiento, Tesorería", "Tres CAF → Coordinación", "30/11/2026"),
+    ("DEC-6", "Ciclo de aplicación de los clasificadores temáticos", "Cambio Climático (49) y Pueblos Indígenas (50) terminan después de la Formulación",
+     "A: adelantarlos (compresión sin sustento) · B: aplicarlos desde la Formulación 2028",
+     "B", "Presión para comprimir dos MFD sin capacidad verificada.",
+     "Presupuesto", "CAF Presupuesto", "30/11/2026"),
+    ("DEC-7", "Alcance de las 33 actividades «No figura en PMO»", "Incluyen las 7 de Ejecución presupuestaria y 6 de 9 de Pagos",
+     "A: incorporar todas · B: incorporar las del ciclo del gasto (181–187, 232–237) y evaluar el resto · C: excluirlas",
+     "B", "El ciclo del gasto quedaría sin presupuesto ni prioridad en la fábrica.",
+     "Presupuesto, Tesorería, Inversiones, Abastecimiento", "UCP", "15/12/2026"),
+    ("DEC-8", "Modelo de Evaluación transversal", "Cuatro sistemas no tienen procesos de Evaluación",
+     "A: módulo de Evaluación por sistema · B: evaluar vía Presupuesto, Inversiones y Contabilidad + validación N10",
+     "B", "Ambigüedad de alcance y posibles módulos redundantes.",
+     "Los siete", "Coordinación del Proyecto", "31/01/2027"),
+    ("DEC-9", "Política de programación y construcción (C3)", "No hay vínculos, línea base ni fechas de construcción",
+     "A: pasar todo a automático · B: automático solo con vínculos validados + línea base + cronograma C3",
+     "B", "El cronograma seguirá sin ruta crítica y sin fechas de puesta en uso.",
+     "Los siete", "Coordinación + PMO + OGTI", "04/12/2026"),
+]
+
+ANTES_DESPUES = [
+    ("1 · Cuota de pago después de Pagos (Tesorería)", "Crítica", "Cuota v1 (N1) + v2 (163)", "N1: 03/05/2027 – 02/06/2027", "Media", "Condicionado a validación"),
+    ("2 · OC/OS y Conformidad después de la ejecución (Abastecimiento–Presupuesto)", "Crítica", "División N2 / 181 / N3 + entregas M1 y M2", "181: 30/06–31/08/2027; N3: 01/11–24/12/2027", "Media", "Condicionado a validación"),
+    ("3 · Cronograma sin lógica de red", "Alta", "87 vínculos verificados + línea base", "Carga al 27/11/2026", "Baja", "Condicionado a validación"),
+    ("4 · Cierres contables antes que la ejecución", "Alta", "Escenario A + adecuación N5", "N5: 27/12/2027 – 18/02/2028", "Media", "Pendiente de decisión"),
+    ("5 · Motor contable sin actualizar después de 2028", "Alta", "Actualizaciones 3 y 4 (N6, N7)", "N6: abr–jun 2029; N7: oct–dic 2029", "Baja", "Condicionado a validación"),
+    ("6 · Metas, clasificadores y catálogos v2 tarde para Formulación", "Alta", "Hitos M3 y M4 + DEC-6", "15/01/2027", "Media", "Condicionado a validación"),
+    ("7 · PMI en StandBy y formulación por proyecto desfasada", "Alta", "Reactivar 147, mover 149, Formulación v2 (N4)", "149: 07/12/2026 – 05/02/2027; N4: jul–ago 2027", "Media", "Pendiente de decisión"),
+    ("8 · Deuda e ingresos 10 días tarde para Formulación", "Media", "Hitos M8 y M9", "15/01/2027", "Baja", "Condicionado a validación"),
+    ("9 · Duplicidad de convenios y desembolsos", "Media", "Titular único (DEC-5)", "30/11/2026", "Media", "Pendiente de decisión"),
+    ("10 · 33 actividades fuera del PMO", "Media", "Incorporar las del ciclo del gasto (DEC-7)", "15/12/2026", "Media", "Pendiente de decisión"),
+    ("11 · Cuatro sistemas sin Evaluación", "Media", "Modelo transversal + validación N10", "N10: oct–dic 2029", "Baja", "Condicionado a validación"),
+    ("12 · Evaluación empieza antes que Gestión", "Media", "Vínculos FF (366–369, 350)", "Sin cambio de fechas", "Baja", "Resuelto en la propuesta"),
+    ("13 · Ejecución de deuda antes que las instrucciones de pago", "Media", "Mover 186 (FF con 270 y 272)", "186: 24/09 – 25/11/2027", "Baja", "Resuelto en la propuesta"),
+    ("14 · Calidad de datos del cronograma", "Media", "Regularización + depuración del .mpp", "13/11/2026", "Baja", "Condicionado a validación"),
+    ("15 · Actuaciones preparatorias antes del CMN y PAC", "Media", "Vínculos FC y FF", "Sin cambio de fechas", "Baja", "Resuelto en la propuesta"),
+    ("16 · GFRH concluido antes que sus receptores", "Baja", "Hito de validación M6", "11/08/2027", "Baja", "Resuelto en la propuesta"),
+    ("17 · Catálogos de consolidación 6 días tarde", "Baja", "Vínculo FC −5 días", "Sin cambio de fechas", "Baja", "Resuelto en la propuesta"),
+    ("18 · Cuotas de compromiso con 1 día de margen", "Baja", "Vínculos 175/176 → 181", "Holgura de 21 días", "Baja", "Resuelto en la propuesta"),
+    ("19 · Catálogos de almacén sin revisión", "Baja", "Revisión N11", "N11: oct 2028", "Baja", "Resuelto en la propuesta"),
+    ("Nuevo · Certificación antes de las Actuaciones preparatorias (D23)", "Alta", "Certificación y modelo común de datos (N2)", "N2: 01/02 – 02/04/2027", "Media", "Condicionado a validación"),
+    ("Nuevo · Construcción del software (C3) sin programar", "Alta", "Cronograma C3 alineado a H1–H7 (DEC-9)", "31/01/2027 (solicitud)", "Alta", "No resuelto"),
+]
